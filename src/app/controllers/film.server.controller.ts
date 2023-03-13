@@ -1,18 +1,15 @@
 import {Request, Response} from "express";
 import Logger from "../../config/logger";
-
+import * as films from '../models/film.server.model';
 
 const viewAll = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        const result = await films.getAll();
+        res.status(200).send({"films": result, "count": result.length});
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
-        res.status(500).send();
-        return;
+        res.status(500).send('ERROR getting users ${err}');
     }
 }
 
