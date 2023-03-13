@@ -16,9 +16,10 @@ const getAll = async (): Promise<Film[]> => {
         'CAST(IFNULL(ROUND(AVG(rating), 1),0) AS float) AS rating ' +
         'FROM film ' +
         'LEFT JOIN film_review on film.id = film_review.film_id ' +
-        'LEFT JOIN user ON film.id = user.id ' +
+        'LEFT JOIN user ON film.director_id = user.id ' +
         'GROUP BY film.id ' +
         'ORDER BY releaseDate';
+
     const [ rows ] = await conn.query( query );
     await conn.release();
     return rows;
