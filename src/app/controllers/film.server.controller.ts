@@ -1,14 +1,42 @@
 import {Request, Response} from "express";
 import Logger from "../../config/logger";
 import * as films from '../models/film.server.model';
+import * as schemas from '../resources/schemas.json';
+import { validate } from '../../validate'
 
 const viewAll = async (req: Request, res: Response): Promise<void> => {
-    let q = req.query.q;
-    if (q === undefined) {
-        q = "";
+
+    const validation = await validate(
+        schemas.film_search,
+        req.query);
+    if (validation !== true) {
+        res.statusMessage = 'Bad Request: ${validation.toString()}';
+        res.status(400).send();
+        return;
     }
-    try{
-        const result = await films.getAll(q.toString());
+
+    let q = req.query.q;
+    let count = req.query.count;
+    let startIndex = req.query.startIndex;
+    let directorId = req.query.directorId;
+    let sortBy = req.query.sortBy;
+
+    if (q === undefined) { q = "" }
+    if (count === undefined) { count = "" }
+    if (startIndex === undefined) { startIndex = ""}
+    if (directorId === undefined) { directorId = ""}
+    if (sortBy === undefined) { sortBy = ""}
+
+
+
+    try {
+        const result = await films.getAll(
+            q.toString(),
+            count.toString(),
+            startIndex.toString(),
+            directorId.toString(),
+            sortBy.toString());
+
         res.status(200).send({"films": result, "count": result.length});
     } catch (err) {
         Logger.error(err);
