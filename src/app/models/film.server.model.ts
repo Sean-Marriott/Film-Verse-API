@@ -2,7 +2,7 @@ import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
 import { ResultSetHeader } from "mysql2";
 
-const getAll = async (): Promise<Film[]> => {
+const getAll = async (q: string): Promise<Film[]> => {
     Logger.info('Getting all films from the database');
     const conn = await getPool().getConnection();
     const query = 'SELECT film.id AS filmId, ' +
@@ -17,10 +17,11 @@ const getAll = async (): Promise<Film[]> => {
         'FROM film ' +
         'LEFT JOIN film_review on film.id = film_review.film_id ' +
         'LEFT JOIN user ON film.director_id = user.id ' +
+        'WHERE film.title LIKE ? OR film.description LIKE ? ' +
         'GROUP BY film.id ' +
         'ORDER BY releaseDate';
 
-    const [ rows ] = await conn.query( query );
+    const [ rows ] = await conn.query( query, ['%' + q + '%', '%' + q + '%'] );
     await conn.release();
     return rows;
 };

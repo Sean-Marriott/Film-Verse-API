@@ -3,8 +3,12 @@ import Logger from "../../config/logger";
 import * as films from '../models/film.server.model';
 
 const viewAll = async (req: Request, res: Response): Promise<void> => {
+    let q = req.query.q;
+    if (q === undefined) {
+        q = "";
+    }
     try{
-        const result = await films.getAll();
+        const result = await films.getAll(q.toString());
         res.status(200).send({"films": result, "count": result.length});
     } catch (err) {
         Logger.error(err);
