@@ -7,8 +7,10 @@ const getAll = async (
     count: string,
     startIndex: string,
     directorId: string,
-    sortBy: string): Promise<Film[]> => {
+    sortBy: string,
+    ageRating: string): Promise<Film[]> => {
     Logger.info('Getting all films from the database');
+    const ageRatings = ageRating.split(',');
     const params: any[] = ['%' + q + '%', '%' + q + '%'];
     const conn = await getPool().getConnection();
     let query = 'SELECT film.id AS filmId, ' +
@@ -28,6 +30,17 @@ const getAll = async (
     if (directorId !== "") {
         query += ' AND user.id = ? ';
         params.push(parseInt(directorId, 10));
+    }
+
+    if (ageRating !== "") {
+        query += ' AND ('
+        for (let i=0; i<ageRatings.length; i++){
+            if (i !== ageRatings.length-1) {
+                query += 'film.age_rating = "' + ageRatings[i] +'" OR '
+            } else {
+                query += 'film.age_rating = "' + ageRatings[i] + '") '
+            }
+        }
     }
 
     query += 'GROUP BY film.id ORDER BY ';
@@ -53,7 +66,7 @@ const getAll = async (
     }
 
     query += sortMethod + ', film.id ASC';
-
+    Logger.info(query);
     let [ rows ] = await conn.query( query, params );
     await conn.release();
 
