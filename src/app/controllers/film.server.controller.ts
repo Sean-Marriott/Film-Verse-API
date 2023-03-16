@@ -15,9 +15,10 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    let q = req.query.q;
-    let count = req.query.count;
     let startIndex = req.query.startIndex;
+    let count = req.query.count;
+    let q = req.query.q;
+    let genreIds = req.query.genreIds
     let directorId = req.query.directorId;
     let sortBy = req.query.sortBy;
     let ageRatings = req.query.ageRatings;
@@ -28,6 +29,8 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
     if (directorId === undefined) { directorId = ""}
     if (sortBy === undefined) { sortBy = ""}
     if (ageRatings === undefined) { ageRatings = ""}
+    if (genreIds === undefined) { genreIds = ""}
+
 
     try {
         const result = await films.getAll(
@@ -36,7 +39,8 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
             startIndex.toString(),
             directorId.toString(),
             sortBy.toString(),
-            ageRatings.toString());
+            ageRatings.toString(),
+            genreIds.toString());
 
         res.status(200).send({"films": result, "count": result.length});
     } catch (err) {

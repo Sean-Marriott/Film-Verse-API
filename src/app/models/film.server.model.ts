@@ -8,7 +8,8 @@ const getAll = async (
     startIndex: string,
     directorId: string,
     sortBy: string,
-    ageRating: string): Promise<Film[]> => {
+    ageRating: string,
+    genreIds: string): Promise<Film[]> => {
     Logger.info('Getting all films from the database');
     const ageRatings = ageRating.split(',');
     const params: any[] = ['%' + q + '%', '%' + q + '%'];
@@ -30,6 +31,17 @@ const getAll = async (
     if (directorId !== "") {
         query += ' AND user.id = ? ';
         params.push(parseInt(directorId, 10));
+    }
+
+    if (genreIds !== "") {
+        query += ' AND ('
+        for (let i=0; i<genreIds.length; i++){
+            if (i !== genreIds.length-1) {
+                query += 'film.genre_id = "' + genreIds[i] +'" OR '
+            } else {
+                query += 'film.genre_id = "' + genreIds[i] + '") '
+            }
+        }
     }
 
     if (ageRating !== "") {
