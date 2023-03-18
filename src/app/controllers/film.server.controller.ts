@@ -10,8 +10,7 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
         schemas.film_search,
         req.query);
     if (validation !== true) {
-        res.statusMessage = 'Bad Request: ${validation.toString()}';
-        res.status(400).send();
+        res.status(400).send('Bad Request');
         return;
     }
 
@@ -63,9 +62,14 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
 
 const getOne = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        Logger.info('GET single film id: ${req.params.id}');
+        const id = req.params.id;
+        const result = await films.getOne( parseInt(id, 10));
+        if (result.length === 0 ){
+            res.status(404).send('Not Found. No film with id');
+        } else {
+            res.status(200).send(result[0]);
+        }
         return;
     } catch (err) {
         Logger.error(err);

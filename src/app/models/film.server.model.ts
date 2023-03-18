@@ -1,6 +1,7 @@
 import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
 import { ResultSetHeader } from "mysql2";
+import logger from "../../config/logger";
 
 const getAll = async (
     q: string,
@@ -24,7 +25,7 @@ const getAll = async (
         'film.age_rating AS ageRating, ' +
         '(SELECT CAST(IFNULL(ROUND(AVG(rating), 1),0) AS float) FROM film_review WHERE film.id = film_review.film_id) AS rating ' +
         'FROM film ' +
-        'LEFT JOIN film_review on film.id = film_review.film_id ' +
+        'LEFT JOIN film_review ON film.id = film_review.film_id ' +
         'LEFT JOIN user ON film.director_id = user.id ' +
         'WHERE (film.title LIKE ? OR film.description LIKE ?)';
 
@@ -89,6 +90,31 @@ const getAll = async (
     return rows;
 };
 
+const getOne = async(id: number): Promise<Film[]> => {
+    Logger.info('Getting film ${id} from the database');
+    const conn = await getPool().getConnection();
+    const query = 'SELECT film.id AS filmId, ' +
+        'film.title AS title, ' +
+        'film.genre_id AS genreId, ' +
+        'film.age_rating AS ageRating, ' +
+        'film.director_id AS directorId, ' +
+        'user.first_name AS directorFirstName, ' +
+        'user.last_name AS directorLastName, ' +
+        '(SELECT CAST(IFNULL(ROUND(AVG(rating), 1),0) AS float) FROM film_review WHERE film.id = film_review.film_id) AS rating, ' +
+        'film.release_date AS releaseDate, ' +
+        'film.description AS description, ' +
+        'film.runtime AS runtime, ' +
+        '(SELECT COUNT(*) FROM film_review WHERE film.id = film_review.film_id) AS numReviews ' +
+        'FROM film ' +
+        'LEFT JOIN film_review ON film.id = film_review.film_id ' +
+        'LEFT JOIN user ON film.director_id = user.id ' +
+        'WHERE film.id = ?';
+    logger.info(query);
+    const [ rows ] = await conn.query( query, [ id ] );
+        await conn.release();
+        return rows;
+}
+
 const getGenres = async(): Promise<Genre[]> => {
     const conn = await getPool().getConnection();
     const query = 'SELECT genre.id AS genreId, genre.name as name FROM genre';
@@ -99,4 +125,4 @@ const getGenres = async(): Promise<Genre[]> => {
 
 }
 
-export { getAll, getGenres }
+export { getAll, getOne, getGenres }
