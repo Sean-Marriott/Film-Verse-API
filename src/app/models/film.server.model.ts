@@ -89,4 +89,14 @@ const getAll = async (
     return rows;
 };
 
-export { getAll }
+const getGenres = async(): Promise<Genre[]> => {
+    const conn = await getPool().getConnection();
+    const query = 'SELECT genre.id AS genreId, genre.name as name FROM genre';
+    const [ rows ] = await conn.query( query );
+    await conn.release();
+
+    return rows;
+
+}
+
+export { getAll, getGenres }
