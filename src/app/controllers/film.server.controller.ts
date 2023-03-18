@@ -19,30 +19,41 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
     let count = req.query.count;
     let q = req.query.q;
     let genreIds = req.query.genreIds
-    let directorId = req.query.directorId;
-    let sortBy = req.query.sortBy;
     let ageRatings = req.query.ageRatings;
+    let directorId = req.query.directorId;
+    let reviewerId = req.query.reviewerId;
+    let sortBy = req.query.sortBy;
 
-    if (q === undefined) { q = "" }
-    if (count === undefined) { count = "" }
     if (startIndex === undefined) { startIndex = ""}
-    if (directorId === undefined) { directorId = ""}
-    if (sortBy === undefined) { sortBy = ""}
-    if (ageRatings === undefined) { ageRatings = ""}
+    if (count === undefined) { count = "" }
+    if (q === undefined) { q = "" }
     if (genreIds === undefined) { genreIds = ""}
+    if (ageRatings === undefined) { ageRatings = ""}
+    if (directorId === undefined) { directorId = ""}
+    if (reviewerId === undefined) { reviewerId = ""}
+    if (sortBy === undefined) { sortBy = ""}
 
 
     try {
-        const result = await films.getAll(
+        let result = await films.getAll(
             q.toString(),
-            count.toString(),
-            startIndex.toString(),
-            directorId.toString(),
-            sortBy.toString(),
+            genreIds.toString(),
             ageRatings.toString(),
-            genreIds.toString());
+            directorId.toString(),
+            reviewerId.toString(),
+            sortBy.toString());
 
-        res.status(200).send({"films": result, "count": result.length});
+        const filmCount = result.length;
+
+        if (startIndex !== "" && count !== "") {
+            result = result.slice(parseInt(startIndex.toString(), 10), parseInt(startIndex.toString(),10) + parseInt(count.toString(), 10))
+        } else if (count !== "") {
+            result = result.slice(0, parseInt(count.toString(), 10))
+        } else if (startIndex !== "") {
+            result = result.slice(parseInt(startIndex.toString(), 10))
+        }
+
+        res.status(200).send({"films": result, "count": filmCount});
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
