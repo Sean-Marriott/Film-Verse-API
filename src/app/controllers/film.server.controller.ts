@@ -10,7 +10,7 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
         schemas.film_search,
         req.query);
     if (validation !== true) {
-        res.status(400).send('Bad Request');
+        res.status(400).send();
         return;
     }
 

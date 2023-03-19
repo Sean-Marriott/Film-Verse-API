@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 
 const ajv = new Ajv({removeAdditional: 'all', strict: false});
 
-ajv.addFormat("integer", /[0-9]*/)
+ajv.addFormat("integer", /^[0-9]*$/)
 const validate = async (schema: object, data: any) => {
     try {
         const validator = ajv.compile(schema);
