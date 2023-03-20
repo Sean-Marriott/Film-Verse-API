@@ -1,6 +1,5 @@
 import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
-import { ResultSetHeader } from "mysql2";
 import logger from "../../config/logger";
 
 const getAll = async (
@@ -40,12 +39,19 @@ const getAll = async (
     }
 
     if (genreId !== "") {
-        query += ' AND ('
+        const [ allGenreIds ] = await conn.query( "SELECT id FROM genre" );
         for (let i=0; i<genreIds.length; i++){
-            if (i !== genreIds.length-1) {
-                query += 'film.genre_id = "' + genreIds[i] +'" OR '
+            if (genreIds[i] in allGenreIds) {
+                if (i === 0) {
+                    query += ' AND ('
+                }
+                if (i !== genreIds.length-1) {
+                    query += 'film.genre_id = "' + genreIds[i] +'" OR '
+                } else {
+                    query += 'film.genre_id = "' + genreIds[i] + '") '
+                }
             } else {
-                query += 'film.genre_id = "' + genreIds[i] + '") '
+                throw new Error("BAD GENRE ID");
             }
         }
     }
@@ -84,6 +90,8 @@ const getAll = async (
     }
 
     query += sortMethod + ', film.id ASC';
+    logger.info(query);
+
     const [ rows ] = await conn.query( query, params );
     await conn.release();
 
@@ -109,10 +117,9 @@ const getOne = async(id: number): Promise<Film[]> => {
         'LEFT JOIN film_review ON film.id = film_review.film_id ' +
         'LEFT JOIN user ON film.director_id = user.id ' +
         'WHERE film.id = ?';
-    logger.info(query);
     const [ rows ] = await conn.query( query, [ id ] );
-        await conn.release();
-        return rows;
+    await conn.release();
+    return rows;
 }
 
 const getGenres = async(): Promise<Genre[]> => {

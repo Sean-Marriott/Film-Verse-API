@@ -54,9 +54,13 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
 
         res.status(200).send({"films": result, "count": filmCount});
     } catch (err) {
+        if (err.toString() === "Error: BAD GENRE ID") {
+            res.statusMessage = "Bad Request";
+            res.status(400).send();
+        }
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
-        res.status(500).send('ERROR getting users ${err}');
+        res.status(500).send();
     }
 }
 
