@@ -3,6 +3,7 @@ import {rootUrl} from "./base.server.routes";
 import * as film from '../controllers/film.server.controller';
 import * as filmImages from '../controllers/film.image.server.controller';
 import * as filmReviews from '../controllers/film.review.server.controller';
+import * as authenticate from "../middleware/authentication.middleware";
 
 module.exports = (app: Express) => {
     app.route(rootUrl+'/films')
