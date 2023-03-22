@@ -5,6 +5,7 @@ import * as schemas from '../resources/schemas.json';
 import { validate } from '../../validate'
 import * as bcrypt from 'bcrypt';
 import * as randToken from 'rand-token';
+import {findUserIdByToken} from "../models/user.server.model";
 const register = async (req: Request, res: Response): Promise<void> => {
     try{
         const validation = await validate(
@@ -71,9 +72,15 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
 const logout = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const token = req.header('X-Authorization')
+        const user = await findUserIdByToken(token);
+        if (user.length === 0) {
+            res.statusMessage = "Unauthorized. Cannot log out if you are not authenticated";
+            res.status(401).send();
+        }
+        await users.insertToken(user[0].id, null);
+        res.statusMessage = "OK";
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
