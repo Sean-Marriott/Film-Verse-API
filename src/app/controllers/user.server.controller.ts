@@ -4,7 +4,7 @@ import * as users from '../models/user.server.model';
 import * as schemas from '../resources/schemas.json';
 import { validate } from '../../validate'
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+import * as randToken from 'rand-token';
 const register = async (req: Request, res: Response): Promise<void> => {
     try{
         const validation = await validate(
@@ -20,9 +20,8 @@ const register = async (req: Request, res: Response): Promise<void> => {
         const password = req.body.password  ;
         const salt = await bcrypt.genSalt();
         const passwordHash = await bcrypt.hash(password, salt);
-        const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET)
 
-        const result = await users.insert(email.toString(), firstName.toString(), lastName.toString(), passwordHash, token);
+        const result = await users.insert(email.toString(), firstName.toString(), lastName.toString(), passwordHash);
         res.status(201).send({"userId":result.insertId});
     } catch (err) {
         if (err.errno === 1062) {
@@ -48,13 +47,14 @@ const login = async (req: Request, res: Response): Promise<void> => {
         const email = req.body.email;
         const password = req.body.password;
         const user = await users.getByEmail(email);
-        const token = jwt.sign(user[0].email, process.env.ACCESS_TOKEN_SECRET)
+        const token = randToken.generate(16);
 
         if (!user) {
             res.statusMessage = "Not Authorised. Incorrect email/password";
             res.status(401).send();
         }
         if (await bcrypt.compare(password, user[0].password)) {
+            await users.insertToken(user[0].id, token);
             res.statusMessage = "OK";
             res.status(200).send({"userId": user[0].id, "token": token});
         } else {

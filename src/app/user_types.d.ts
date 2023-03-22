@@ -16,7 +16,11 @@ type User = {
      */
     lastName: string,
     /**
-     * Hash of password as created when eantered
+     * Hash of password as created when entered
      */
-    password: string
+    password: string,
+    /**
+     * Authentication token as created when the user logs in
+     */
+    token: string
 }
