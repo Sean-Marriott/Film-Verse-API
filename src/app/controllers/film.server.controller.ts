@@ -3,6 +3,7 @@ import Logger from "../../config/logger";
 import * as films from '../models/film.server.model';
 import * as schemas from '../resources/schemas.json';
 import { validate } from '../../validate'
+import {findUserByToken} from "../models/user.server.model";
 
 const viewAll = async (req: Request, res: Response): Promise<void> => {
 
@@ -86,9 +87,44 @@ const getOne = async (req: Request, res: Response): Promise<void> => {
 
 const addOne = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const validation = await validate(
+            schemas.film_post,
+            req.query);
+        if (validation !== true) {
+            res.statusMessage = 'Bad Request';
+            res.status(400).send();
+            return;
+        }
+
+        const title = req.query.title;
+        const description = req.query.description;
+        let releaseDate = req.query.releaseDate;
+        const genreId = req.query.genreId;
+        let runTime = req.query.runTime;
+        let ageRating = req.query.ageRating;
+        const token = req.header('X-Authorization');
+        const userByToken = await findUserByToken(token);
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+            return;
+        }
+        const directorId = userByToken[0].id;
+        if (releaseDate === undefined) {releaseDate = Date()}
+        if (runTime === undefined) {runTime = ""}
+        if (ageRating === undefined) {ageRating = "TBC"}
+
+        const result = await films.addFilm(
+            title.toString(),
+            description.toString(),
+            releaseDate.toString(),
+            genreId.toString(),
+            runTime.toString(),
+            ageRating.toString(),
+            directorId.toString()
+        );
+        res.statusMessage = "Created";
+        res.status(201).send();
         return;
     } catch (err) {
         Logger.error(err);

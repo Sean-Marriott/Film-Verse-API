@@ -1,6 +1,7 @@
 import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
 import logger from "../../config/logger";
+import {ResultSetHeader} from "mysql2";
 
 const getAll = async (
     q: string,
@@ -132,4 +133,20 @@ const getGenres = async(): Promise<Genre[]> => {
 
 }
 
-export { getAll, getOne, getGenres }
+const addFilm = async(title: string,
+                      description: string,
+                      releaseDate: string,
+                      genreId: string,
+                      runtime: string,
+                      ageRating: string,
+                      directorId: string): Promise<ResultSetHeader> => {
+    Logger.info('Adding film ${title} to the database');
+
+    const conn = await getPool().getConnection();
+    const query = 'INSERT INTO film (title, description, release_date, runtime, director_id, genre_id, age_rating) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    const [ result ] = await conn.query( query, [title, description, releaseDate, runtime, directorId, genreId, ageRating]);
+    await conn.release();
+    return result;
+}
+
+export { getAll, getOne, getGenres, addFilm }
