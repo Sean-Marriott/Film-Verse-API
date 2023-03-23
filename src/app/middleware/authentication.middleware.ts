@@ -1,11 +1,11 @@
 import {Request, Response} from "express";
 import Logger from "../../config/logger";
-import {findUserIdByToken} from '../models/user.server.model';
+import {findUserByToken} from '../models/user.server.model';
 
 export let loginRequired = async (req: Request, res: Response, next: () => void) => {
     const token = req.header('X-Authorization')
     try {
-        const result = await findUserIdByToken(token);
+        const result = await findUserByToken(token);
         if (result.length === 0) {
             res.statusMessage = 'Unauthorized';
             res.status(401)
