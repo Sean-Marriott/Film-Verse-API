@@ -67,8 +67,9 @@ const viewAll = async (req: Request, res: Response): Promise<void> => {
 const getOne = async (req: Request, res: Response): Promise<void> => {
     try{
         Logger.info('GET single film id: ${req.params.id}');
-        const id = req.params.id;
-        const result = await films.getOne( parseInt(id, 10));
+        let id = req.params.id;
+        if (id === undefined) { id = ""}
+        const result = await films.getOne(id.toString());
         if (result.length === 0 ){
             res.status(404).send('Not Found. No film with id');
         } else {

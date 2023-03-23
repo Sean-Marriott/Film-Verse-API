@@ -6,6 +6,7 @@ import { validate } from '../../validate'
 import * as bcrypt from 'bcrypt';
 import * as randToken from 'rand-token';
 import {findUserIdByToken} from "../models/user.server.model";
+import * as films from "../models/film.server.model";
 const register = async (req: Request, res: Response): Promise<void> => {
     try{
         const validation = await validate(
@@ -92,10 +93,19 @@ const logout = async (req: Request, res: Response): Promise<void> => {
 
 const view = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        let id = req.params.id;
+        if (id === undefined) { id = ""}
+        const token = req.header('X-Authorization')
+        const user = await findUserIdByToken(token);
+        let loggedIn = true;
+        if (user.length === 0) {loggedIn = false}
+        else if (user[0].id.toString() !== id) {loggedIn = false}
+        const result = await users.getById(id.toString(), loggedIn);
+        if (result.length === 0 ){
+            res.status(404).send('Not Found. No user with specified ID');
+        } else {
+            res.status(200).send(result[0]);
+        }
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";

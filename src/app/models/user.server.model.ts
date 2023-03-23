@@ -23,6 +23,16 @@ const getByEmail = async(email: string): Promise<User[]> => {
     return rows;
 }
 
+const getById = async(id: string, loggedIn: boolean): Promise<User[]> => {
+    Logger.info('Getting user ${email} from the database');
+    const conn = await getPool().getConnection();
+    let query = 'SELECT first_name AS firstName, last_name AS lastName FROM user WHERE id = ?'
+    if (loggedIn) {query = 'SELECT email, first_name AS firstName, last_name AS lastName FROM user WHERE id = ?'}
+    const [ rows ] = await conn.query( query, [ id ] );
+    await conn.release();
+    return rows;
+}
+
 const insertToken = async(userId: number, token: string): Promise<ResultSetHeader> => {
     Logger.info('Adding token ${token} to user ${userId} to the database');
     const conn = await getPool().getConnection();
@@ -41,4 +51,4 @@ const findUserIdByToken = async(token: string): Promise<User[]> => {
     return rows;
 }
 
-export { insert, getByEmail, insertToken, findUserIdByToken }
+export { insert, getByEmail, getById, insertToken, findUserIdByToken }

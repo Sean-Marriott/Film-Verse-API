@@ -98,7 +98,7 @@ const getAll = async (
     return rows;
 };
 
-const getOne = async(id: number): Promise<Film[]> => {
+const getOne = async (id: string): Promise<Film[]> => {
     Logger.info('Getting film ${id} from the database');
     const conn = await getPool().getConnection();
     const query = 'SELECT film.id AS filmId, ' +
