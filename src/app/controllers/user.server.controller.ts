@@ -6,7 +6,6 @@ import { validate } from '../../validate'
 import * as bcrypt from 'bcrypt';
 import * as randToken from 'rand-token';
 import {findUserIdByToken} from "../models/user.server.model";
-import * as films from "../models/film.server.model";
 const register = async (req: Request, res: Response): Promise<void> => {
     try{
         const validation = await validate(
@@ -19,7 +18,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
         const email = req.body.email;
         const firstName = req.body.firstName;
         const lastName = req.body.lastName;
-        const password = req.body.password  ;
+        const password = req.body.password;
         const salt = await bcrypt.genSalt();
         const passwordHash = await bcrypt.hash(password, salt);
 
@@ -117,9 +116,31 @@ const view = async (req: Request, res: Response): Promise<void> => {
 
 const update = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const validation = await validate(
+            schemas.user_edit,
+            req.body);
+        if (validation !== true) {
+            res.status(400).send();
+            return;
+        }
+        let id = req.params.id;
+        let email = req.body.email;
+        let firstName = req.body.firstName;
+        let lastName = req.body.lastName;
+        let password = req.body.password;
+        const salt = await bcrypt.genSalt();
+
+        if (id === undefined) { id = "" }
+        if (email === undefined) { email = "" }
+        if (firstName === undefined) { firstName = "" }
+        if (lastName === undefined) { lastName = "" }
+        if (password === undefined) { password = "" }
+        else { password = await bcrypt.hash(password, salt) }
+
+        const currentPassword = req.body.currentPassword;
+
+        const result = await users.editUser(id.toString(), email.toString(), firstName.toString(), lastName.toString(), password)
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
@@ -128,5 +149,7 @@ const update = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 }
+
+
 
 export {register, login, logout, view, update}

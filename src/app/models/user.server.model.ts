@@ -51,4 +51,33 @@ const findUserIdByToken = async(token: string): Promise<User[]> => {
     return rows;
 }
 
-export { insert, getByEmail, getById, insertToken, findUserIdByToken }
+const editUser = async(id: string,
+                       email: string,
+                       firstName: string,
+                       lastName: string,
+                       password: string): Promise<ResultSetHeader> => {
+    Logger.info('Editing user ${userId} in the database');
+    const params: [string, string][] = [];
+    if (email !== "") { params.push(["email", email]) }
+    if (firstName !== "") { params.push(["first_name", firstName]) }
+    if (lastName !== "") { params.push(["last_name", lastName]) }
+    if (password !== "") { params.push(["password", password]) }
+    if (params.length === 0) { return null;}
+    const conn = await getPool().getConnection();
+    let query = 'UPDATE user SET';
+    for (let i=0; i<params.length; i++) {
+        if (i === params.length - 1) {
+           query += ' ' + params[i][0] + ' = "' + params[i][1] + '"'
+        } else {
+           query += ' ' + params[i][0] + ' = "' + params[i][1] + '",'
+        }
+    }
+    query += " WHERE id = " + id;
+    Logger.info(params);
+    Logger.info(query);
+    const [ result ] = await conn.query( query);
+    await conn.release();
+    return result;
+}
+
+export { insert, getByEmail, getById, insertToken, findUserIdByToken, editUser }
