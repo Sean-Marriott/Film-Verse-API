@@ -81,7 +81,7 @@ const editUser = async(id: string,
         }
     }
     query += " WHERE id = " + id;
-    const [ result ] = await conn.query( query);
+    const [ result ] = await conn.query( query );
     await conn.release();
     return result;
 }

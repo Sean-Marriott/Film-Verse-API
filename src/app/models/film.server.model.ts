@@ -164,7 +164,37 @@ const getReviews = async(filmId: string): Promise<Review[]> => {
     const [ rows ] = await conn.query( query, [ filmId ] );
     await conn.release();
     return rows;
-
 }
 
-export { getAll, getOne, getGenres, addFilm, getReviews }
+const editFilm = async(filmId: string,
+                       title: string,
+                       description: string,
+                       releaseDate: string,
+                       genreId: string,
+                       runtime: string,
+                       ageRating: string): Promise<ResultSetHeader> => {
+    Logger.info('Editing film ${filmId} in the database');
+    const params: [string, string][] = [];
+    if (title !== "") { params.push(["title", title]) }
+    if (description !== "") { params.push(["description", description]) }
+    if (releaseDate !== "") { params.push(["release_date", releaseDate]) }
+    if (genreId !== "") { params.push(["genre_id", genreId]) }
+    if (runtime !== "") { params.push(["runtime", runtime]) }
+    if (ageRating !== "") { params.push(["age_rating", ageRating]) }
+    if (params.length === 0) { return null;}
+    const conn = await getPool().getConnection();
+    let query = 'UPDATE film SET';
+    for (let i=0; i<params.length; i++) {
+        if (i === params.length - 1) {
+            query += ' ' + params[i][0] + ' = "' + params[i][1] + '"'
+        } else {
+            query += ' ' + params[i][0] + ' = "' + params[i][1] + '",'
+        }
+    }
+    query += " WHERE id = " + filmId;
+    const [ rows ] = await conn.query( query );
+    await conn.release();
+    return rows;
+}
+
+export { getAll, getOne, getGenres, addFilm, getReviews, editFilm }

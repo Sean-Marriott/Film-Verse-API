@@ -160,9 +160,87 @@ const addOne = async (req: Request, res: Response): Promise<void> => {
 
 const editOne = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const validation = await validate(
+            schemas.film_patch,
+            req.body);
+        if (validation !== true) {
+            Logger.info(validation);
+            res.statusMessage = 'Bad Request';
+            res.status(400).send();
+            return;
+        }
+
+        // Required Params
+        const token = req.header('X-Authorization');
+        const userByToken = await findUserByToken(token);
+        const filmId = req.params.id;
+
+        // Optional Params
+        let title = req.body.title;
+        let description = req.body.description;
+        let releaseDate = req.body.releaseDate;
+        let genreId = req.body.genreId;
+        let runTime = req.body.runtime;
+        let ageRating = req.body.ageRating;
+
+        // Check film exists
+        const film = await films.getOne(filmId.toString());
+        if (film.length === 0) {
+            res.statusMessage = "Not Found. No film found with id";
+            res.status(404).send();
+            return;
+        }
+
+        // Define optional params if undefined
+        if (title === undefined) { title = "" }
+        if (description === undefined) { description = "" }
+        if (genreId === undefined) { genreId = "" }
+        else {
+            // Check genreId references an existing genre
+            const genres = await films.getGenres();
+            const genreIds: string | any[] = [];
+            for (const item of genres) { genreIds.push(item.genreId.toString(10)) }
+            if (!genreIds.includes(genreId.toString())) {
+                res.statusMessage = "Bad Request. Invalid information";
+                res.status(400).send();
+                return;
+            }
+        }
+        if (runTime === undefined) { runTime = "" }
+        if (ageRating === undefined) { ageRating = "" }
+        if (releaseDate === undefined) { releaseDate = "" }
+        else {
+            // Check release date hasn't passed
+            const oldReleaseTime = new Date(film[0].releaseDate)
+            // Check release date in the future
+            const todayTime = new Date();
+            const releaseTime = new Date(releaseDate);
+            if (releaseTime.getTime() - todayTime.getTime() < 0 || oldReleaseTime.getTime() - todayTime.getTime()) {
+                res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
+                res.status(403).send();
+                return;
+            }
+        }
+
+        // Check user is logged in
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+            return;
+        } else {
+            // Check user is director
+            // Check no reviews have been placed
+            const reviews = await films.getReviews(filmId.toString());
+            if (film[0].directorId !== userByToken[0].id || reviews.length !== 0) {
+                res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
+                res.status(403).send();
+                return;
+            }
+        }
+
+        await films.editFilm(filmId.toString(), title.toString(), description.toString(), releaseDate.toString(), genreId.toString(), runTime.toString(), ageRating.toString())
+        res.statusMessage = "OK";
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
