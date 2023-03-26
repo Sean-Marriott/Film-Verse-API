@@ -197,4 +197,18 @@ const editFilm = async(filmId: string,
     return rows;
 }
 
-export { getAll, getOne, getGenres, addFilm, getReviews, editFilm }
+const addReview = async(filmId: string,
+                      userId: string,
+                      rating: string,
+                      review: string): Promise<ResultSetHeader> => {
+    Logger.info('Adding review by ${userId} to film ${filmId} in the database');
+    const conn = await getPool().getConnection();
+    const query = 'INSERT INTO film_review (film_id, user_id, rating, review) VALUES (?, ?, ?, ?)'
+    const [ result ] = await conn.query( query, [filmId, userId, rating, review]);
+    await conn.release();
+    return result;
+}
+
+
+
+export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview }
