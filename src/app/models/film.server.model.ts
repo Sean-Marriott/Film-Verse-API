@@ -149,12 +149,20 @@ const addFilm = async(title: string,
     return result;
 }
 
-const getReviews = async(): Promise<Review[]> => {
+const getReviews = async(filmId: string): Promise<Review[]> => {
     const conn = await getPool().getConnection();
-    const query = 'SELECT genre.id AS genreId, genre.name as name FROM genre';
-    const [ rows ] = await conn.query( query );
+    const query = 'SELECT film_review.user_id AS reviewerId, ' +
+        'film_review.rating AS rating, ' +
+        'film_review.review AS review, ' +
+        'user.first_name AS reviewerFirstName, ' +
+        'user.last_name AS reviewerLastName, ' +
+        'film_review.timestamp AS timestamp ' +
+        'FROM film_review ' +
+        'JOIN user ON film_review.user_id = user.id ' +
+        'WHERE film_review.film_id = ? ' +
+        'ORDER BY film_review.timestamp DESC';
+    const [ rows ] = await conn.query( query, [ filmId ] );
     await conn.release();
-
     return rows;
 
 }
