@@ -215,7 +215,7 @@ const editOne = async (req: Request, res: Response): Promise<void> => {
             // Check release date in the future
             const todayTime = new Date();
             const releaseTime = new Date(releaseDate);
-            if (releaseTime.getTime() - todayTime.getTime() < 0 || oldReleaseTime.getTime() - todayTime.getTime()) {
+            if (releaseTime.getTime() - todayTime.getTime() < 0 || oldReleaseTime.getTime() - todayTime.getTime() < 0) {
                 res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
                 res.status(403).send();
                 return;
