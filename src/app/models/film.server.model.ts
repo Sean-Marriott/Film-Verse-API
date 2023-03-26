@@ -130,7 +130,6 @@ const getGenres = async(): Promise<Genre[]> => {
     await conn.release();
 
     return rows;
-
 }
 
 const addFilm = async(title: string,
@@ -141,6 +140,7 @@ const addFilm = async(title: string,
                       ageRating: string,
                       directorId: string): Promise<ResultSetHeader> => {
     Logger.info('Adding film ${title} to the database');
+    if (runtime === "") { runtime = null }
 
     const conn = await getPool().getConnection();
     const query = 'INSERT INTO film (title, description, release_date, runtime, director_id, genre_id, age_rating) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -149,4 +149,14 @@ const addFilm = async(title: string,
     return result;
 }
 
-export { getAll, getOne, getGenres, addFilm }
+const getReviews = async(): Promise<Review[]> => {
+    const conn = await getPool().getConnection();
+    const query = 'SELECT genre.id AS genreId, genre.name as name FROM genre';
+    const [ rows ] = await conn.query( query );
+    await conn.release();
+
+    return rows;
+
+}
+
+export { getAll, getOne, getGenres, addFilm, getReviews }

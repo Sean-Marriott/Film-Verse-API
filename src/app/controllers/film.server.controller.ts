@@ -86,34 +86,53 @@ const getOne = async (req: Request, res: Response): Promise<void> => {
 }
 
 const addOne = async (req: Request, res: Response): Promise<void> => {
-    try{
+    try {
         const validation = await validate(
             schemas.film_post,
-            req.query);
+            req.body);
         if (validation !== true) {
+            Logger.info(validation);
             res.statusMessage = 'Bad Request';
             res.status(400).send();
             return;
         }
 
-        const title = req.query.title;
-        const description = req.query.description;
-        let releaseDate = req.query.releaseDate;
-        const genreId = req.query.genreId;
-        let runTime = req.query.runTime;
-        let ageRating = req.query.ageRating;
+        // Required Params
+        const title = req.body.title;
+        const description = req.body.description;
+        const genreId = req.body.genreId;
         const token = req.header('X-Authorization');
         const userByToken = await findUserByToken(token);
+
+        // Optional Params
+        let releaseDate = req.body.releaseDate;
+        let runTime = req.body.runtime;
+        let ageRating = req.body.ageRating;
+
+        // Check user is logged in
         if (userByToken.length === 0) {
             res.statusMessage = "Unauthorized";
             res.status(401).send();
             return;
         }
         const directorId = userByToken[0].id;
-        if (releaseDate === undefined) {releaseDate = Date()}
-        if (runTime === undefined) {runTime = ""}
-        if (ageRating === undefined) {ageRating = "TBC"}
 
+        // Define optional params if undefined
+        if (runTime === undefined) { runTime = "" }
+        if (ageRating === undefined) { ageRating = "TBC" }
+        if (releaseDate === undefined) { releaseDate = new Date().toISOString().split('T')[0] }
+        else {
+            // Check release date in the future
+            const todayTime = new Date();
+            const releaseTime = new Date(releaseDate);
+            if (releaseTime.getTime() - todayTime.getTime() < 0) {
+                res.statusMessage = "Forbidden. Film title is not unique, or cannot release a film in the past";
+                res.status(403).send();
+                return;
+            }
+        }
+
+        // Query Database
         const result = await films.addFilm(
             title.toString(),
             description.toString(),
@@ -124,12 +143,17 @@ const addOne = async (req: Request, res: Response): Promise<void> => {
             directorId.toString()
         );
         res.statusMessage = "Created";
-        res.status(201).send();
+        res.status(201).send({"filmId":result.insertId});
         return;
     } catch (err) {
         Logger.error(err);
-        res.statusMessage = "Internal Server Error";
-        res.status(500).send();
+        if (err.errno === 1062) {
+            res.statusMessage = "Forbidden. Film title is not unique, or cannot release a film in the past";
+            res.status(403).send();
+        } else {
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+        }
         return;
     }
 }
