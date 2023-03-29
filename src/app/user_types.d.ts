@@ -16,6 +16,10 @@ type User = {
      */
     lastName: string,
     /**
+     * User's image file name
+     */
+    image_filename: string,
+    /**
      * Hash of password as created when entered
      */
     password: string,

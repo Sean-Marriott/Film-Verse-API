@@ -86,4 +86,13 @@ const editUser = async(id: string,
     return result;
 }
 
-export { insert, getByEmail, getAllById, getById, insertToken, findUserByToken, editUser }
+const updateImage = async(id: string, ImageFileName: string): Promise<ResultSetHeader> => {
+    Logger.info('Updating image for user ${userId} in the database');
+    const conn = await getPool().getConnection();
+    const query = 'UPDATE user SET image_filename = ? WHERE id = ?'
+    const [ result ] = await conn.query( query, [ ImageFileName, id ]);
+    await conn.release();
+    return result;
+}
+
+export { insert, getByEmail, getAllById, getById, insertToken, findUserByToken, editUser, updateImage }
