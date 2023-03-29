@@ -7,9 +7,40 @@ import fs from "mz/fs";
 
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const id = req.params.id;
+        const userById = await users.getAllById(id);
+
+        // No user matching the given user ID
+        if (userById.length === 0) {
+            res.statusMessage = "Not Found. No user with specified ID, or user has no image";
+            res.status(404).send();
+            return;
+        }
+
+        // User doesn't have image
+        if (userById[0].image_filename === null) {
+            res.statusMessage = "Not Found. No user with specified ID, or user has no image";
+            res.status(404).send();
+            return;
+        }
+
+        // Get filename from the user in the database
+        const fileName = userById[0].image_filename;
+        const storagePath = path.join(__dirname, '../../../storage/images');
+        const filePath = path.join(storagePath, fileName);
+        await fs.readFile(filePath, function read(err, data) {
+            if (err) {
+                throw err;
+            }
+            const content = data;
+            // tslint:disable-next-line:no-console
+            console.log(content);
+            const fileType = fileName.split('.')[1]
+            res.statusMessage = 'OK';
+            res.status(200).header("Content-Type", "image/" + fileType).send(content);
+        })
+
+
         return;
     } catch (err) {
         Logger.error(err);
@@ -67,7 +98,7 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
         const fileName = 'user_' + id + extension;
         const storagePath = path.join(__dirname, '../../../storage/images');
         const filePath = path.join(storagePath, fileName);
-        await fs.writeFile(filePath, image);
+        await fs.writeFile(filePath, image, 'binary');
 
         // Update image filename in the database
         await users.updateImage(id, fileName);
