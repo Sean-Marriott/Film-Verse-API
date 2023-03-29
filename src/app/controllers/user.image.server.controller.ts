@@ -93,10 +93,45 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
 
 const deleteImage = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        let id = req.params.id;
+        const token = req.header('X-Authorization');
+        const userByToken = await findUserByToken(token);
+        const userById = await users.getAllById(id);
+
+        if (id === undefined) { id = "" }
+
+        // No user matching the given user ID
+        if (userById.length === 0) {
+            res.statusMessage = "Not found. No such user with ID given";
+            res.status(404).send();
+            return;
+        }
+
+        // Logged-in user does not exist
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+            return;
+        }
+
+        // Check the userId matches the user logged in
+        if (userByToken[0].id !== userById[0].id) {
+            res.statusMessage = "Forbidden. Can not delete another user's profile photo";
+            res.status(403).send();
+            return;
+        }
+
+        // Get filename from the user in the database
+        const fileName = userById[0].image_filename;
+        const storagePath = path.join(__dirname, '../../../storage/images');
+        const filePath = path.join(storagePath, fileName);
+        await fs.unlink(filePath);
+
+        // Update the filename in the database to null
+        await users.updateImage(id, null);
+
+        res.statusMessage = 'OK';
+        res.status(200).send();
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
