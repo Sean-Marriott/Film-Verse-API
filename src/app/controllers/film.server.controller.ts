@@ -252,10 +252,40 @@ const editOne = async (req: Request, res: Response): Promise<void> => {
 
 const deleteOne = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        // Required Params
+        const token = req.header('X-Authorization');
+        const userByToken = await findUserByToken(token);
+        const filmId = req.params.id;
+
+        // Check film exists
+        const film = await films.getOne(filmId.toString());
+        if (film.length === 0) {
+            res.statusMessage = "Not Found. No film found with id";
+            res.status(404).send();
+            return;
+        }
+
+        // Check user is logged in
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+            return;
+        } else {
+            // Check user is director
+            if (film[0].directorId !== userByToken[0].id) {
+                res.statusMessage = "Forbidden. Only the director of an film can delete it";
+                res.status(403).send();
+                return;
+            }
+        }
+
+        // Delete film
+        await films.deleteFilm(filmId);
+        // TODO: Delete film image from database
+
+        res.statusMessage = "NOT IMPLEMENTED YET";
+        res.status(500).send();
+
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";

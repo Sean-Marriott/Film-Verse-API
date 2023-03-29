@@ -1,6 +1,5 @@
 import { getPool } from "../../config/db";
 import Logger from "../../config/logger";
-import logger from "../../config/logger";
 import {ResultSetHeader} from "mysql2";
 
 const getAll = async (
@@ -91,7 +90,6 @@ const getAll = async (
     }
 
     query += sortMethod + ', film.id ASC';
-    logger.info(query);
 
     const [ rows ] = await conn.query( query, params );
     await conn.release();
@@ -209,6 +207,15 @@ const addReview = async(filmId: string,
     return result;
 }
 
+const deleteFilm = async(filmId: string): Promise<ResultSetHeader> => {
+    Logger.info('Deleting film ${filmId} in the database');
+    const conn = await getPool().getConnection();
+    const query = 'DELETE FROM film WHERE id = ?';
+    const [ result ] = await conn.query( query, [ filmId ]);
+    await conn.release();
+    return result;
+}
 
 
-export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview }
+
+export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview, deleteFilm }
