@@ -36,6 +36,10 @@ type Film = {
      */
     releaseDate: string,
     /**
+     * User's image file name
+     */
+    image_filename: string,
+    /**
      * Film's description as entered when created
      */
     description: string,

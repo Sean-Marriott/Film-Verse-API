@@ -216,6 +216,14 @@ const deleteFilm = async(filmId: string): Promise<ResultSetHeader> => {
     return result;
 }
 
+const updateImage = async(id: string, ImageFileName: string): Promise<ResultSetHeader> => {
+    Logger.info('Updating image for film ${id} in the database');
+    const conn = await getPool().getConnection();
+    const query = 'UPDATE film SET image_filename = ? WHERE id = ?'
+    const [ result ] = await conn.query( query, [ ImageFileName, id ]);
+    await conn.release();
+    return result;
+}
 
 
-export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview, deleteFilm }
+export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview, deleteFilm, updateImage }
