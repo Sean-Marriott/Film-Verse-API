@@ -243,5 +243,23 @@ const getAllById = async(id: string): Promise<Film[]> => {
     return rows;
 }
 
+const getByName = async(title: string): Promise<Film[]> => {
+    Logger.info('Getting user ${email} from the database');
+    const conn = await getPool().getConnection();
+    const query = 'SELECT id AS filId,' +
+        'title, ' +
+        'genre_id AS genreId, ' +
+        'age_rating AS ageRating, ' +
+        'director_id AS directorId, ' +
+        'release_date AS releaseDate, ' +
+        'image_filename, ' +
+        'description, ' +
+        'runtime ' +
+        'FROM film WHERE title = ?'
+    const [ rows ] = await conn.query( query, [ title ] );
+    await conn.release();
+    return rows;
+}
 
-export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview, deleteFilm, updateImage, getAllById }
+
+export { getAll, getOne, getGenres, addFilm, getReviews, editFilm, addReview, deleteFilm, updateImage, getAllById, getByName }
