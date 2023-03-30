@@ -6,7 +6,6 @@ import * as films from "../models/film.server.model";
 import path from "path";
 import fs from "mz/fs";
 
-
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try{
         const id = req.params.id;
@@ -55,7 +54,7 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
         const imageType = req.header('Content-Type')
         const token = req.header('X-Authorization');
         const userByToken = await findUserByToken(token);
-        const film = await films.getOne(id);
+        const film = await films.getAllById(id);
 
         if (id === undefined) { id = "" }
 
