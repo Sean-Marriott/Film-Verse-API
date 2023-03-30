@@ -195,10 +195,12 @@ const editOne = async (req: Request, res: Response): Promise<void> => {
 
         // Check title unique
         const filmByName = await films.getByName(title.toString());
-        if (title === filmByName[0].title) {
-            res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
-            res.status(403).send();
-            return;
+        if (filmByName.length !== 0) {
+            if (title === filmByName[0].title) {
+                res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
+                res.status(403).send();
+                return;
+            }
         }
 
         // Define optional params if undefined
