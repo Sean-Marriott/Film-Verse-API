@@ -9,9 +9,36 @@ import fs from "mz/fs";
 
 const getImage = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const id = req.params.id;
+        const film = await films.getAllById(id);
+
+        // No film matching the given film ID
+        if(film.length === 0) {
+            res.statusMessage = "Not found. No film found with id, or film has no image";
+            res.status(404).send();
+            return;
+        }
+
+        // Film doesn't have an image
+        if(film[0].image_filename === null) {
+            res.statusMessage = "Not found. No film found with id, or film has no image";
+            res.status(404).send();
+            return;
+        }
+
+        // Get filename from the film in the database
+        const fileName = film[0].image_filename;
+        const storagePath = path.join(__dirname, '../../../storage/images');
+        const filePath = path.join(storagePath, fileName);
+        await fs.readFile(filePath, function read(err, data) {
+            if (err) {
+                throw err;
+            }
+            const content = data;
+            const fileType = fileName.split('.')[1]
+            res.statusMessage = 'OK';
+            res.status(200).header("Content-Type", "image/" + fileType).send(content);
+        })
         return;
     } catch (err) {
         Logger.error(err);

@@ -37,8 +37,6 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
             res.statusMessage = 'OK';
             res.status(200).header("Content-Type", "image/" + fileType).send(content);
         })
-
-
         return;
     } catch (err) {
         Logger.error(err);
