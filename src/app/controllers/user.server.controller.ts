@@ -8,10 +8,12 @@ import * as randToken from 'rand-token';
 import {findUserByToken} from "../models/user.server.model";
 const register = async (req: Request, res: Response): Promise<void> => {
     try{
+        Logger.info('Adding user ${email} to the database');
         const validation = await validate(
             schemas.user_register,
             req.body);
         if (validation !== true) {
+            res.statusMessage = "Bad Request. Invalid information";
             res.status(400).send();
             return;
         }
@@ -23,6 +25,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
         const passwordHash = await bcrypt.hash(password, salt);
 
         const result = await users.insert(email.toString(), firstName.toString(), lastName.toString(), passwordHash);
+        res.statusMessage = "Created";
         res.status(201).send({"userId":result.insertId});
         return;
     } catch (err) {
@@ -39,11 +42,13 @@ const register = async (req: Request, res: Response): Promise<void> => {
 }
 
 const login = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('Logging in user ${email}');
     try{
         const validation = await validate(
             schemas.user_login,
             req.body);
         if (validation !== true) {
+            res.statusMessage = "Bad Request. Invalid information";
             res.status(400).send();
             return;
         }
@@ -52,7 +57,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
         const user = await users.getByEmail(email);
         const token = randToken.generate(16);
 
-        if (!user) {
+        if (user.length === 0) {
             res.statusMessage = "Not Authorised. Incorrect email/password";
             res.status(401).send();
             return;
@@ -75,6 +80,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
 }
 
 const logout = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('Logging out user');
     try{
         const token = req.header('X-Authorization')
         const user = await findUserByToken(token);
@@ -96,6 +102,7 @@ const logout = async (req: Request, res: Response): Promise<void> => {
 }
 
 const view = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('Getting user ${id} from the database');
     try{
         let id = req.params.id;
         if (id === undefined) { id = ""}
@@ -106,11 +113,14 @@ const view = async (req: Request, res: Response): Promise<void> => {
         else if (user[0].id.toString() !== id) {loggedIn = false}
         const result = await users.getById(id.toString(), loggedIn);
         if (result.length === 0 ){
-            res.status(404).send('Not Found. No user with specified ID');
+            res.statusMessage = 'Not Found. No user with specified ID';
+            res.status(404).send();
+            return;
         } else {
+            res.statusMessage = 'OK'
             res.status(200).send(result[0]);
+            return;
         }
-        return;
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
@@ -121,7 +131,19 @@ const view = async (req: Request, res: Response): Promise<void> => {
 
 
 const update = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('Updating user ${id} in the database');
     try{
+        // Check authorization first
+        const token = req.header('X-Authorization')
+        const userByToken = await findUserByToken(token);
+
+        // Logged-in user does not exist
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized or Invalid currentPassword";
+            res.status(401).send();
+            return;
+        }
+
         const validation = await validate(
             schemas.user_edit,
             req.body);
@@ -136,9 +158,7 @@ const update = async (req: Request, res: Response): Promise<void> => {
         let lastName = req.body.lastName;
         let password = req.body.password;
         const salt = await bcrypt.genSalt();
-        const token = req.header('X-Authorization')
         const userById = await users.getAllById(id);
-        const userByToken = await findUserByToken(token);
         const currentPassword = req.body.currentPassword;
 
         if (id === undefined) { id = "" }
@@ -151,13 +171,6 @@ const update = async (req: Request, res: Response): Promise<void> => {
         if (userById.length === 0) {
             res.statusMessage = "Not Found";
             res.status(404).send();
-            return;
-        }
-
-        // Logged-in user does not exist
-        if (userByToken.length === 0) {
-            res.statusMessage = "Unauthorized or Invalid currentPassword";
-            res.status(401).send();
             return;
         }
 
