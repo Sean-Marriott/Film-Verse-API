@@ -185,22 +185,19 @@ const editOne = async (req: Request, res: Response): Promise<void> => {
         let runTime = req.body.runtime;
         let ageRating = req.body.ageRating;
 
+        // Check user is logged in
+        if (userByToken.length === 0) {
+            res.statusMessage = "Unauthorized";
+            res.status(401).send();
+            return;
+        }
+
         // Check film exists
         const film = await films.getOne(filmId.toString());
         if (film.length === 0) {
             res.statusMessage = "Not Found. No film found with id";
             res.status(404).send();
             return;
-        }
-
-        // Check title unique
-        const filmByName = await films.getByName(title.toString());
-        if (filmByName.length !== 0) {
-            if (title === filmByName[0].title) {
-                res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
-                res.status(403).send();
-                return;
-            }
         }
 
         // Define optional params if undefined
@@ -234,16 +231,19 @@ const editOne = async (req: Request, res: Response): Promise<void> => {
             }
         }
 
-        // Check user is logged in
-        if (userByToken.length === 0) {
-            res.statusMessage = "Unauthorized";
-            res.status(401).send();
+        // Check user is director
+        // Check no reviews have been placed
+        const reviews = await films.getReviews(filmId.toString());
+        if (film[0].directorId !== userByToken[0].id || reviews.length !== 0) {
+            res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
+            res.status(403).send();
             return;
-        } else {
-            // Check user is director
-            // Check no reviews have been placed
-            const reviews = await films.getReviews(filmId.toString());
-            if (film[0].directorId !== userByToken[0].id || reviews.length !== 0) {
+        }
+
+        // Check title unique
+        const filmByName = await films.getByName(title.toString());
+        if (filmByName.length !== 0) {
+            if (title === filmByName[0].title) {
                 res.statusMessage = "Forbidden. Only the director of an film may change it, cannot change the releaseDate since it has already passed, cannot edit a film that has a review placed, or cannot release a film in the past";
                 res.status(403).send();
                 return;
