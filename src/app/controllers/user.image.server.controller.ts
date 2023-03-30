@@ -150,6 +150,11 @@ const deleteImage = async (req: Request, res: Response): Promise<void> => {
 
         // Get filename from the user in the database
         const fileName = userById[0].image_filename;
+        if (fileName === null) {
+            res.statusMessage = "Not found";
+            res.status(404).send();
+            return;
+        }
         const storagePath = path.join(__dirname, '../../../storage/images');
         const filePath = path.join(storagePath, fileName);
         await fs.unlink(filePath);
@@ -159,6 +164,7 @@ const deleteImage = async (req: Request, res: Response): Promise<void> => {
 
         res.statusMessage = 'OK';
         res.status(200).send();
+        return;
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
