@@ -10,6 +10,7 @@ const getAll = async (
     reviewerId: string,
     sortBy: string
     ): Promise<Film[]> => {
+    Logger.info("Getting all films from the database")
     const ageRatings = ageRating.split(',');
     const genreIds = genreId.split(',');
     const params: any[] = ['%' + q + '%', '%' + q + '%'];
@@ -122,6 +123,7 @@ const getOne = async (id: string): Promise<Film[]> => {
 }
 
 const getGenres = async(): Promise<Genre[]> => {
+    Logger.info("Getting all genres from the database")
     const conn = await getPool().getConnection();
     const query = 'SELECT genre.id AS genreId, genre.name as name FROM genre';
     const [ rows ] = await conn.query( query );
@@ -148,6 +150,7 @@ const addFilm = async(title: string,
 }
 
 const getReviews = async(filmId: string): Promise<Review[]> => {
+    Logger.info('Getting reviews for ${filmId} from the database')
     const conn = await getPool().getConnection();
     const query = 'SELECT film_review.user_id AS reviewerId, ' +
         'film_review.rating AS rating, ' +
