@@ -228,7 +228,16 @@ const updateImage = async(id: string, ImageFileName: string): Promise<ResultSetH
 const getAllById = async(id: string): Promise<Film[]> => {
     Logger.info('Getting user ${email} from the database');
     const conn = await getPool().getConnection();
-    const query = 'SELECT * FROM film WHERE id = ?'
+    const query = 'SELECT id AS filId,' +
+        'title, ' +
+        'genre_id AS genreId, ' +
+        'age_rating AS ageRating, ' +
+        'director_id AS directorId, ' +
+        'release_date AS releaseDate, ' +
+        'image_filename, ' +
+        'description, ' +
+        'runtime ' +
+        'FROM film WHERE id = ?'
     const [ rows ] = await conn.query( query, [ id ] );
     await conn.release();
     return rows;

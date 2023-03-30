@@ -4,6 +4,8 @@ import * as films from '../models/film.server.model';
 import * as schemas from '../resources/schemas.json';
 import { validate } from '../../validate'
 import {findUserByToken} from "../models/user.server.model";
+import path from "path";
+import fs from "mz/fs";
 
 const viewAll = async (req: Request, res: Response): Promise<void> => {
 
@@ -258,7 +260,7 @@ const deleteOne = async (req: Request, res: Response): Promise<void> => {
         const filmId = req.params.id;
 
         // Check film exists
-        const film = await films.getOne(filmId.toString());
+        const film = await films.getAllById(filmId.toString());
         if (film.length === 0) {
             res.statusMessage = "Not Found. No film found with id";
             res.status(404).send();
@@ -279,12 +281,19 @@ const deleteOne = async (req: Request, res: Response): Promise<void> => {
             }
         }
 
-        // Delete film
-        await films.deleteFilm(filmId);
-        // TODO: Delete film image from database
+        // Get filename from the film in the database
+        const fileName = film[0].image_filename;
+        if (fileName !== null) {
+            // Delete file
+            const storagePath = path.join(__dirname, '../../../storage/images');
+            const filePath = path.join(storagePath, fileName);
+            await fs.unlink(filePath);
+        }
+        // Remove the film from the database
+        await films.deleteFilm(filmId)
 
-        res.statusMessage = "NOT IMPLEMENTED YET";
-        res.status(500).send();
+        res.statusMessage = "OK";
+        res.status(200).send();
 
     } catch (err) {
         Logger.error(err);
