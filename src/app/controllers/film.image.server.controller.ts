@@ -91,7 +91,7 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Create file
-        const fileName = 'film' + id + extension;
+        const fileName = 'film_' + id + extension;
         const storagePath = path.join(__dirname, '../../../storage/images');
         const filePath = path.join(storagePath, fileName);
         await fs.writeFile(filePath, image, 'binary');
